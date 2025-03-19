@@ -2,6 +2,7 @@
 import { Document } from "mongoose";
 
 interface IOrder {
+    orderId: string;
     date: Date;
     customer: string;
     items: string[]; 

@@ -1,6 +1,7 @@
 import { Document } from "mongoose";
 
 interface IAppointment {
+    appointment_id: string;
     pet_id: string;
     veterinarian: string;
     date: Date;
