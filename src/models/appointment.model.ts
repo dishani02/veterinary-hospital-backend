@@ -2,11 +2,6 @@ import { model, Schema } from "mongoose";
 import { IAppointmentModel } from "../interfaces/appointment.interface";
 
 const AppointmentSchema: Schema<IAppointmentModel> = new Schema({
-    appointment_id: { 
-        type: String, 
-        unique: true,
-        required: true 
-    },
     pet_id: { 
         type: String, 
         required: true 

@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import ProductRoutes from "./controllers/product.controller";
+import AppointmentRoutes from "./controllers/appointment.controller";
+import OrderRoutes from "./controllers/order.controller";
 import mongoose from "mongoose";
 
 dotenv.config();
@@ -17,6 +19,8 @@ app.use("/api/ping", (req, res, next) => {
 });
 
 app.use("/api/products", ProductRoutes);
+app.use("/api/appointment", AppointmentRoutes);
+app.use("/api/order", OrderRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json({ message: "API Endpoint Not Found!" });
