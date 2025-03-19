@@ -2,6 +2,11 @@ import { model, Schema } from "mongoose";
 import { IOrderModel } from "../interfaces/order.interface";
 
 const OrderSchema: Schema<IOrderModel> = new Schema({
+    orderId: { 
+        type: String, 
+        required: true, 
+        unique: true 
+    },
     date: { 
         type: Date, 
         required: true 
