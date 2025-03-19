@@ -9,7 +9,6 @@ router.post("/", async (req, res) => {
     const body = req.body;
 
     const appointment = new AppointmentModel();
-    appointment.appointment_id = body.appointment_id;
     appointment.pet_id = body.pet_id;
     appointment.veterinarian = body.veterinarian;
     appointment.date = body.date;

@@ -7,7 +7,6 @@ router.post("/", async (req, res) => {
     const body = req.body;
 
     const order = new OrderModel();
-    order.orderId = body.orderId;
     order.date = body.date;
     order.customer = body.customer;
     order.items = body.items;
