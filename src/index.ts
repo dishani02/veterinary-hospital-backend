@@ -5,6 +5,11 @@ import dotenv from "dotenv";
 import ProductRoutes from "./controllers/product.controller";
 import AppointmentRoutes from "./controllers/appointment.controller";
 import OrderRoutes from "./controllers/order.controller";
+import UserRoutes from "./controllers/user.controller";
+
+
+
+
 import mongoose from "mongoose";
 
 dotenv.config();
@@ -21,6 +26,7 @@ app.use("/api/ping", (req, res, next) => {
 app.use("/api/products", ProductRoutes);
 app.use("/api/appointment", AppointmentRoutes);
 app.use("/api/order", OrderRoutes);
+app.use("/api/user", UserRoutes);
 
 
 app.use((req, res, next) => {
