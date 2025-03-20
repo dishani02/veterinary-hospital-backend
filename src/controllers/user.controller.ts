@@ -2,8 +2,8 @@ import { Router,Request, Response } from "express";
 import UserModel from "../models/user.model";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import AuthMiddleware from '../middleware/auth.middleware';
 
-import { verifyToken } from "../middleware/auth.middleware"; // Ensure correct import
 
 const router = Router();
 
