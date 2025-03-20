@@ -23,6 +23,10 @@ const UserSchema: Schema<IUserModel> = new Schema(
             type: String,
             required: true,
         },
+        password: { 
+            type: String, 
+            required: true 
+        }, 
     },
     { versionKey: false, timestamps: true }
 );

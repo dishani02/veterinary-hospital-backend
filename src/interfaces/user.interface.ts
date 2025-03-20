@@ -6,6 +6,7 @@ interface IUser {
     nic: string;
     email: string;
     address: string;
+    password: string;
 }
 
 interface IUserModel extends IUser, Document {}
