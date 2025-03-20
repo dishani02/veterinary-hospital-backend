@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 interface IStaff {
     name: string;
@@ -6,7 +6,7 @@ interface IStaff {
     nic: string;
     email: string;
     phone: string;
-    role: "Veterinarian" | "Lab Staff" | "Clinic Staff"; 
+    role: "Veterinarian" | "Admin"; 
 }
 
 interface IStaffModel extends IStaff, Document {}

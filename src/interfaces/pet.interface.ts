@@ -1,16 +1,21 @@
 import { Document, Types } from "mongoose";
 
-interface IPet {
-    name: string;
-    gender: "Male" | "Female";
+interface IPetDetails {
     type: string;
     breed: string;
     age: number;
-    image?: string;
-    userId: Types.ObjectId; // Reference to the User model
+    image: string;
 }
 
-interface IPetModel extends IPet, Document {}
+interface IPet {
+    petId: string;
+    name: string;
+    gender: "Male" | "Female";
+    details: IPetDetails;
+    ownerId: Types.ObjectId;
+}
+
+interface IPetModel extends IPet, IPetDetails, Document {}
 
 export {
     IPet,
