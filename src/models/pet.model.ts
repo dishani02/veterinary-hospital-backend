@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 import { IPetModel } from "../interfaces/pet.interface";
 
 const PetSchema: Schema<IPetModel> = new Schema(
@@ -28,8 +28,13 @@ const PetSchema: Schema<IPetModel> = new Schema(
             type: String,
             default: "",
         },
+        userId: {
+            type: Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
     },
-    { versionKey: false, timestamps: true } 
+    { versionKey: false, timestamps: true }
 );
 
 export default model<IPetModel>("Pet", PetSchema);
