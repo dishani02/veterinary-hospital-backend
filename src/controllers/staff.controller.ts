@@ -39,47 +39,47 @@ router.get("/", async (req, res) => {
 });
 
 
-router.get("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const staff = await StaffModel.findById(id);
-        if (!staff) {
-            return res.status(404).json({ message: "Staff member not found" });
-        }
-        res.status(200).json(staff);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching staff member", error });
-    }
-});
+// router.get("/:id", async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const staff = await StaffModel.findById(id);
+//         if (!staff) {
+//             return res.status(404).json({ message: "Staff member not found" });
+//         }
+//         res.status(200).json(staff);
+//     } catch (error) {
+//         res.status(500).json({ message: "Error fetching staff member", error });
+//     }
+// });
 
 
-router.put("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updatedStaff = await StaffModel.findByIdAndUpdate(id, req.body, { new: true });
-        if (!updatedStaff) {
-            return res.status(404).json({ message: "Staff member not found" });
-        }
-        res.status(200).json({
-            message: "Staff member updated successfully!",
-            payload: updatedStaff
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Error updating staff member", error });
-    }
-});
+// router.put("/:id", async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const updatedStaff = await StaffModel.findByIdAndUpdate(id, req.body, { new: true });
+//         if (!updatedStaff) {
+//             return res.status(404).json({ message: "Staff member not found" });
+//         }
+//         res.status(200).json({
+//             message: "Staff member updated successfully!",
+//             payload: updatedStaff
+//         });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error updating staff member", error });
+//     }
+// });
 
-router.delete("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deletedStaff = await StaffModel.findByIdAndDelete(id);
-        if (!deletedStaff) {
-            return res.status(404).json({ message: "Staff member not found" });
-        }
-        res.status(200).json({ message: "Staff member deleted successfully!" });
-    } catch (error) {
-        res.status(500).json({ message: "Error deleting staff member", error });
-    }
-});
+// router.delete("/:id", async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const deletedStaff = await StaffModel.findByIdAndDelete(id);
+//         if (!deletedStaff) {
+//             return res.status(404).json({ message: "Staff member not found" });
+//         }
+//         res.status(200).json({ message: "Staff member deleted successfully!" });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error deleting staff member", error });
+//     }
+// });
 
 export default router;

@@ -6,8 +6,7 @@ import ProductRoutes from "./controllers/product.controller";
 import AppointmentRoutes from "./controllers/appointment.controller";
 import OrderRoutes from "./controllers/order.controller";
 import UserRoutes from "./controllers/user.controller";
-
-
+import PetRoutes from "./controllers/pet.controller"; 
 
 
 import mongoose from "mongoose";
@@ -27,11 +26,16 @@ app.use("/api/products", ProductRoutes);
 app.use("/api/appointment", AppointmentRoutes);
 app.use("/api/order", OrderRoutes);
 app.use("/api/user", UserRoutes);
+app.use("/api/pets", PetRoutes);
 
 
 app.use((req, res, next) => {
     res.status(404).json({ message: "API Endpoint Not Found!" });
 });
+
+// app.listen(5000, () => {
+//     console.log("Server running on port 5000");
+// });
 
 const start = () => {
     try {
