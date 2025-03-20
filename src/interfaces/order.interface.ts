@@ -7,11 +7,17 @@ interface IOrderItem {
     subtotal: number;
 }
 
+export interface ICustomer {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+}
+
 interface IOrder {
     orderId: string;
     date: Date;
-    customer: string;
-    //items: string[]; 
+    customer: ICustomer;   
     price: number;
     status: "pending" | "canceled" | "complete"; 
     items: IOrderItem[];
