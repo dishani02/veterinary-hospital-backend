@@ -38,53 +38,79 @@ router.post(
 
 // product list
 router.get(
-    "/", 
+    "/",
     AuthMiddleware.checkAuth([
         common.USER_ROLES.ADMIN,
         common.USER_ROLES.PET_OWNER,
     ]),
     async (req, res) => {
-    try {
-        const products = await ProductModel.find();
-        res.status(200).json(products);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching products", error });
-    }
-});
+        try {
+            const products = await ProductModel.find();
+            res.status(200).json(products);
+        } catch (error) {
+            res.status(500).json({ message: "Error fetching products", error });
+        }
+    });
 
 
 // // read product 
-// router.get("/:id", async (req , res) => {
-//     try {
-//         const product = await ProductModel.findById(req.params.id);
-//         if (!product) return res.status(404).json({ message: "Product not found" });
-//         res.status(200).json(product);
-//     } catch (error) {
-//         res.status(500).json({ message: "Error fetching product", error: error.message });
-//     }
-// });
+router.get(
+    "/:id",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+        common.USER_ROLES.PET_OWNER,
+    ]),
+    async (req, res)=> {
+        try {
+            const product = await ProductModel.findById(req.params.id);
+            if (!product) {
+                res.status(404).json({ message: "Product not found" });
+                return;
+            }
+            res.status(200).json(product);
+        } catch (error) {
+            res.status(500).json({ message: "Error fetching product", error: error });
+        }
+    });
 
 // //update product
-// router.put("/:id", async (req, res) => {
-//     try {
-//         const updatedProduct = await ProductModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-//         if (!updatedProduct) return res.status(404).json({ message: "Product not found" });
-//         res.status(200).json({ message: "Product successfully updated!", payload: updatedProduct });
-//     } catch (error) {
-//         res.status(500).json({ message: "Error updating product", error: error.message });
-//     }
-// });
+router.put(
+    "/:id",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+    ]),
+    async (req, res)=> {
+        try {
+            const updatedProduct = await ProductModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+            if (!updatedProduct) {
+                res.status(404).json({ message: "Product not found" });
+                return;
+            }
+            res.status(200).json({ message: "Product successfully updated!", payload: updatedProduct });
+        } catch (error) {
+            res.status(500).json({ message: "Error updating product", error: error });
+        }
+    });
 
 // //delete
-// router.delete("/:id", async (req, res) => {
-//     try {
-//         const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
-//         if (!deletedProduct) return res.status(404).json({ message: "Product not found" });
-//         res.status(200).json({ message: "Product successfully deleted!" });
-//     } catch (error) {
-//         res.status(500).json({ message: "Error deleting product", error: error.message });
-//     }
-// });
+router.delete(
+    "/:id",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+    ]),
+    async (req, res) => {
+        try {
+            const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
+            if (!deletedProduct) {
+                res.status(404).json({ message: "Product not found" });
+                return
+            }
+            res.status(200).json({ message: "Product successfully deleted!" });
+        } catch (error) {
+            res.status(500).json({ message: "Error deleting product", error: error });
+        }
+    });
 
 
 export default router;
