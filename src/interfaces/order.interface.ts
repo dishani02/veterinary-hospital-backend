@@ -8,6 +8,7 @@ interface IOrderItem {
 }
 
 interface IOrder {
+    orderId: string;
     date: Date;
     customer: string;
     //items: string[]; 

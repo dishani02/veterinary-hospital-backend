@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 interface IPet {
     name: string;
@@ -7,6 +7,7 @@ interface IPet {
     breed: string;
     age: number;
     image?: string;
+    userId: Types.ObjectId; // Reference to the User model
 }
 
 interface IPetModel extends IPet, Document {}
