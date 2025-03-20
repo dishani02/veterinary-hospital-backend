@@ -2,15 +2,6 @@ import { model, Schema } from "mongoose";
 import { IAppointmentModel } from "../interfaces/appointment.interface";
 
 const AppointmentSchema: Schema<IAppointmentModel> = new Schema({
-    appointment_id: { 
-        type: String, 
-        unique: true,
-        required: true 
-    },
-    pet_id: { 
-        type: String, 
-        required: true 
-    },
 
     veterinarian: { 
         type: String, 
@@ -30,7 +21,19 @@ const AppointmentSchema: Schema<IAppointmentModel> = new Schema({
     }, 
     note: {
         type: String
-    }
+    },
+    
+    userId: { 
+        type: Schema.Types.ObjectId,
+        ref: "user", 
+        required:true
+    },
+
+    petId: {
+        type: Schema.Types.ObjectId,
+        ref: "pet", 
+        required:true
+    },
 
 }, { versionKey: false, timestamps: true });
 
