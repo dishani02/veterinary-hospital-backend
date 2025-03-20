@@ -19,7 +19,6 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
     }
 };
 
-// ✅ Helper function for manually decoding token when needed
 export const decodeToken = (token: string) => {
     return jwt.verify(token, SECRET_KEY);
 };

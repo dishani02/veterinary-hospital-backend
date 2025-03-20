@@ -29,10 +29,10 @@ const PetSchema: Schema<IPetModel> = new Schema(
             default: "",
         },
         userId: {
-            type: Types.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: "User",
-            required: true,
-        },
+            required: true
+        }
     },
     { versionKey: false, timestamps: true }
 );

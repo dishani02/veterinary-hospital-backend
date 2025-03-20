@@ -3,11 +3,11 @@ import { Router, Request, Response } from "express";
 import OrderModel from "../models/order.model";
 import UserModel from "../models/user.model";
 import jwt from "jsonwebtoken";
-import { verifyToken } from "../middleware/auth.middleware"; 
+import { verifyToken } from "../middleware/auth.middleware";
 
 const router = Router();
 
-const SECRET_KEY = "2effbd077fc5422316f52484b98626a977015811df825445e398ba55e5391b9d"; 
+const SECRET_KEY = "2effbd077fc5422316f52484b98626a977015811df825445e398ba55e5391b9d";
 
 const decodeToken = (token: string) => {
     return jwt.verify(token, SECRET_KEY);
@@ -34,8 +34,12 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
         // Create order
         const order = new OrderModel({
             date: req.body.date,
-            customer: req.body.customer,
-            items: req.body.items,
+            customer: {
+                name: user.name,
+                address: user.address,
+                phone: user.phone,
+                email: user.email
+            }, items: req.body.items,
             price: req.body.price,
             userId: userIdFromToken,
             status: req.body.status || "pending",
@@ -104,107 +108,114 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
 
 
 
-// // delete order
-// router.delete("/:orderId", async (req, res) => {
-//     const { orderId } = req.params;
-//     const token = req.headers.authorization?.split(' ')[1];
+// delete order
 
+// router.delete("/:orderId", verifyToken, async (req: Request, res: Response): Promise<void> => {
 //     try {
+//         const { orderId } = req.params;
+//         const token = req.headers.authorization?.split(" ")[1];
 
-//         if (!token) return res.status(401).json({ message: "No token provided" });
+//         if (!token) {
+//             res.status(401).json({ message: "No token provided" });
+//             return;
+//         }
 
-//         const decoded: any = verifyUser(token);
+//         const decoded: any = decodeToken(token);
 //         const userIdFromToken = decoded.userId;
+//         const userRole = decoded.role; // Assuming token contains role info
 
 //         const order = await OrderModel.findById(orderId);
 //         if (!order) {
-//             return res.status(404).json({ message: "Order not found" });
+//             res.status(404).json({ message: "Order not found" });
+//             return;
 //         }
 
+//         //check if the order is "complete" or "canceled"
 //         if (order.status !== "complete" && order.status !== "canceled") {
-//             return res.status(400).json({ message: "Order can only be deleted if it is complete or canceled" });
+//             res.status(400).json({ message: "Order can only be deleted if it is complete or canceled" });
+//             return;
 //         }
 
-//         if (decoded.role !== "admin" && order.userId.toString() !== userIdFromToken) {
-//             return res.status(403).json({ message: "You can only delete your own orders or if you're an admin" });
+//         // Ensure only admins or the order owner can delete
+//         if (userRole !== "admin" && order.userId.toString() !== userIdFromToken) {
+//             res.status(403).json({ message: "You can only delete your own orders or if you're an admin" });
+//             return;
 //         }
 
 //         await OrderModel.findByIdAndDelete(orderId);
 
-//         //   res.status(200).json({ message: "Order deleted successfully" });
-//         // } catch (error) {
-//         //   res.status(500).json({ message: "Error deleting order", error: error.message });
-//         // }
-
-//         res.status(200).json({ message: "Order status updated to canceled", payload: order });
+//         res.status(200).json({ message: "Order deleted successfully" });
 //     } catch (error: unknown) {
 //         if (error instanceof Error) {
-//             res.status(500).json({ message: "Error canceling order", error: error.message });
+//             res.status(500).json({ message: "Error deleting order", error: error.message });
 //         } else {
 //             res.status(500).json({ message: "An unknown error occurred", error });
 //         }
 //     }
-
 // });
+
 
 // // admin order List
-// router.get("/admin/orders", async (req, res) => {
-//     const token = req.headers.authorization?.split(' ')[1];
-
+// router.get("/admin/orders", verifyToken, async (req: Request, res: Response): Promise<void> => {
 //     try {
-//         if (!token) return res.status(401).json({ message: "No token provided" });
+//         const token = req.headers.authorization?.split(" ")[1];
 
-//         const decoded: any = verifyUser(token);
-//         if (decoded.role !== "admin") {
-//             return res.status(403).json({ message: "Access denied. Admins only." });
+//         if (!token) {
+//             res.status(401).json({ message: "No token provided" });
+//             return;
 //         }
 
-//         const orders = await OrderModel.find();
-//         //     res.status(200).json({ payload: orders });
-//         // } catch (error) {
-//         //     res.status(500).json({ message: "Error fetching orders", error: error.message });
-//         // }
+//         const decoded: any = decodeToken(token);
 
-//         res.status(200).json({ message: "Order status updated to canceled", payload: orders });
+//         // Ensure the user is an admin
+//         if (decoded.role !== "admin") {
+//             res.status(403).json({ message: "Access denied. Admins only." });
+//             return;
+//         }
+
+//         // Fetch all orders
+//         const orders = await OrderModel.find();
+
+//         res.status(200).json({ message: "Orders retrieved successfully", payload: orders });
 //     } catch (error: unknown) {
 //         if (error instanceof Error) {
-//             res.status(500).json({ message: "Error canceling order", error: error.message });
+//             res.status(500).json({ message: "Error fetching orders", error: error.message });
 //         } else {
 //             res.status(500).json({ message: "An unknown error occurred", error });
 //         }
 //     }
 // });
 
+
 // //user order history
-// router.get("/order-history", async (req, res) => {
-//     const token = req.headers.authorization?.split(' ')[1];
-
+// router.get("/order-history", verifyToken, async (req: Request, res: Response): Promise<void> => {
 //     try {
+//         const token = req.headers.authorization?.split(" ")[1];
 
-//         if (!token) return res.status(401).json({ message: "No token provided" });
+//         if (!token) {
+//             res.status(401).json({ message: "No token provided" });
+//             return;
+//         }
 
-//         const decoded: any = verifyUser(token);
+//         const decoded: any = decodeToken(token);
 //         const userIdFromToken = decoded.userId;
 
+//         // Fetch user order history
 //         const orders = await OrderModel.find({ userId: userIdFromToken }).populate("userId", "name");
 
 //         if (orders.length === 0) {
-//             return res.status(404).json({ message: "No orders found for this user" });
+//             res.status(404).json({ message: "No orders found for this user" });
+//             return;
 //         }
 
-//         //   res.status(200).json({ payload: orders });
-//         // } catch (error) {
-//         //   res.status(500).json({ message: "Error fetching user orders", error: error.message });
-//         // }
-//         res.status(200).json({ message: "Order status updated to canceled", payload: orders });
+//         res.status(200).json({ message: "User order history retrieved successfully", payload: orders });
 //     } catch (error: unknown) {
 //         if (error instanceof Error) {
-//             res.status(500).json({ message: "Error canceling order", error: error.message });
+//             res.status(500).json({ message: "Error fetching user orders", error: error.message });
 //         } else {
 //             res.status(500).json({ message: "An unknown error occurred", error });
 //         }
 //     }
-
 // });
 
 
