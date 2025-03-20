@@ -1,13 +1,27 @@
-// order.interface.ts
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
+
+interface IOrderItem {
+    product: string;
+    quantity: number;
+    price: number;
+    subtotal: number;
+}
+
+export interface ICustomer {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+}
 
 interface IOrder {
     orderId: string;
     date: Date;
-    customer: string;
-    items: string[]; 
+    customer: ICustomer;   
     price: number;
-    status: "pending" | "in-progress" | "complete";  // Order status with predefined options
+    status: "pending" | "canceled" | "complete"; 
+    items: IOrderItem[];
+    userId: Types.ObjectId;
 }
 
 interface IOrderModel extends IOrder, Document {}

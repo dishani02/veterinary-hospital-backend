@@ -1,20 +1,19 @@
 
 import { Router } from 'express';
 import ProductModel from '../models/product.model';
-import { productSchema } from '../validations/product.schema';
+import AuthMiddleware from '../middleware/auth.middleware';
+import common from '../utils/common.util';
 
 const router = Router();
 
-router.post("/", async (req, res) => {
+router.post(
+    "/",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN
+    ]),
+    async (req, res) => {
 
-    const body = req.body;
-
-    const { error } = productSchema.validate(body, { abortEarly: false });
-
-    if (error) {
-        // res.status(400).json({ error: error.details[0].message });
-        res.status(400).json({ error: error });
-    } else {
+        const body = req.body;
 
         const product = new ProductModel();
         product.name = body.name;
@@ -35,7 +34,57 @@ router.post("/", async (req, res) => {
             message: "Product successfully created!",
             payload: product
         });
+    });
+
+// product list
+router.get(
+    "/", 
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+        common.USER_ROLES.PET_OWNER,
+    ]),
+    async (req, res) => {
+    try {
+        const products = await ProductModel.find();
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching products", error });
     }
 });
+
+
+// // read product 
+// router.get("/:id", async (req , res) => {
+//     try {
+//         const product = await ProductModel.findById(req.params.id);
+//         if (!product) return res.status(404).json({ message: "Product not found" });
+//         res.status(200).json(product);
+//     } catch (error) {
+//         res.status(500).json({ message: "Error fetching product", error: error.message });
+//     }
+// });
+
+// //update product
+// router.put("/:id", async (req, res) => {
+//     try {
+//         const updatedProduct = await ProductModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//         if (!updatedProduct) return res.status(404).json({ message: "Product not found" });
+//         res.status(200).json({ message: "Product successfully updated!", payload: updatedProduct });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error updating product", error: error.message });
+//     }
+// });
+
+// //delete
+// router.delete("/:id", async (req, res) => {
+//     try {
+//         const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
+//         if (!deletedProduct) return res.status(404).json({ message: "Product not found" });
+//         res.status(200).json({ message: "Product successfully deleted!" });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error deleting product", error: error.message });
+//     }
+// });
+
 
 export default router;
