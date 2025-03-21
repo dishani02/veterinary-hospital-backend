@@ -40,7 +40,13 @@ const ProductSchema:Schema<IProductModel> = new Schema({
     },
     image: {
         type: String
+    },userId: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     }
+
+
 }, { versionKey: false, timestamps: true });
 
 export default model<IProductModel>("Product", ProductSchema);
