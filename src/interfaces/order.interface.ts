@@ -1,7 +1,7 @@
-import { Document, Types } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 
 interface IOrderItem {
-    product: string;
+    _id: string | mongoose.Types.ObjectId;
     quantity: number;
     price: number;
     subtotal: number;
@@ -15,7 +15,6 @@ export interface ICustomer {
 }
 
 interface IOrder {
-    orderId: string;
     date: Date;
     customer: ICustomer;   
     price: number;

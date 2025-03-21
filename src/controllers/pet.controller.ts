@@ -1,50 +1,58 @@
 import { Router, Request, Response } from "express";
 import PetModel from "../models/pet.model";
+import UserModel from "../models/user.model";
 import jwt from "jsonwebtoken";
-import { verifyToken } from "../middleware/auth.middleware";
+import common from '../utils/common.util';
+import AuthMiddleware from '../middleware/auth.middleware';
+
 
 const router = Router();
 
-const SECRET_KEY = "2effbd077fc5422316f52484b98626a977015811df825445e398ba55e5391b9d";
+const SECRET_KEY = process.env.JWT_SECRET || common.JWT_SECRET;
 
-const decodeToken = (token: string) => {
-    return jwt.verify(token, SECRET_KEY);
-};
 
-router.post("/", async (req: Request, res: Response): Promise<void> => {
-    try {
-        const token = req.headers.authorization?.split(" ")[1];
+router.post("/",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.PET_OWNER
+    ]),
+    async (req: Request, res: Response): Promise<void> => {
+        try {
+            const userIdFromToken = (req as any).user?.userId;
 
-        if (!token) {
-            res.status(401).json({ message: "No token provided" });
-            return;
+            const user = await UserModel.findById(userIdFromToken);
+            if (!user) {
+                res.status(404).json({ message: "User not found" });
+                return
+            }
+            const pet = new PetModel({
+                name: req.body.name,
+                customer: {
+                    name: user.name,
+                    phone: user.phone,
+                },
+                gender: req.body.gender,
+                type: req.body.type,
+                breed: req.body.breed,
+                age: req.body.age,
+                image: req.body.image,
+                userId: userIdFromToken,
+
+            });
+
+            await pet.save();
+
+            res.status(201).json({
+                message: "Pet successfully added!",
+                payload: pet,
+            });
+        } catch (error) {
+            res.status(500).json({ message: "Error occurred", error: (error as Error).message });
         }
+    });
 
-        const decoded: any = decodeToken(token);
-        if (decoded.role !== "admin") {
-            res.status(403).json({ message: "Admins only." });
-            return;
-        }
 
-        const pet = new PetModel({
-            name: req.body.name,
-            gender: req.body.gender,
-            type: req.body.type,
-            breed: req.body.breed,
-            age: req.body.age,
-            image: req.body.image
-        });
 
-        await pet.save();
 
-        res.status(201).json({
-            message: "Pet successfully added!",
-            payload: pet,
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Error occurred", error: (error as Error).message });
-    }
-});
 
 router.get("/", async (_req: Request, res: Response): Promise<void> => {
     try {

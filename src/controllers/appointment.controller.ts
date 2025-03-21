@@ -1,93 +1,197 @@
-
-//create appoin - craeatepart
-import { Router } from 'express';
-import AppointmentModel from '../models/appointment.model.js';
-// import UserModel from '../models/user.model.js';
+import { Router, Request, Response } from 'express';
+import AppointmentModel from '../models/appointment.model';
+import UserModel from "../models/user.model";
 // import VetModel from '../models/vet.model.js';
+import common from '../utils/common.util';
+import AuthMiddleware from '../middleware/auth.middleware';
 import { appointmentSchema } from '../validations/appointment.schema.js';
+
+const SECRET_KEY = process.env.JWT_SECRET || common.JWT_SECRET;
 
 const router = Router();
 
- router.post("/", async (req, res) => {                                                                                                                                     
+//create appointment
+router.post("/",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.PET_OWNER
+    ]),
+    async (req, res) => {
 
-    const body = req.body;
+         try {
+                    const userIdFromToken = (req as any).user?.userId;
+        
+                    const user = await UserModel.findById(userIdFromToken);
+                    if (!user) {
+                        res.status(404).json({ message: "User not found" });
+                        return
+                    }
+        
 
-    const { error } = appointmentSchema.validate(body, { abortEarly: false });
+            // const vet = await VetModel.findById(body.veterinarian);
+            // if (!vet) return res.status(404).json({ error: "Veterinarian not found" });
 
-    if (error) {
-        res.status(400).json({ error: error });
-    } else {
+            const appointment = new AppointmentModel();
+            //appointment.veterinarian = body.veterinarian;
+            appointment.date = req.body.date;
+            appointment.time = req.body.time;
+            appointment.reason = req.body.reason;
+            appointment.status= req.body.status || "pending",
+            appointment.userId= userIdFromToken,
+            // appointment.petId = body.petId;
 
-        // const user = await UserModel.findById(body.userId);
-        // if (!user) return res.status(404).json({ error: "User not found" });
+            //if (body.note) appointment.note = body.note;
 
-        // const vet = await VetModel.findById(body.veterinarian);
-        // if (!vet) return res.status(404).json({ error: "Veterinarian not found" });
+            await appointment.save();
 
-        const appointment = new AppointmentModel();
-        appointment.userId = body.userId;
-        appointment.veterinarian = body.veterinarian;
-        appointment.date = body.date;
-        appointment.time = body.time;
-        appointment.reason = body.reason;
-        appointment.status = "pending";
-        appointment.userId = body.userId;
-        appointment.petId = body.petId;
+            res.status(201).json({
+                message: "Appointment successfully booked!",
+                payload: appointment
+            });
+         }catch (error) {
+            res.status(500).json({ message: "Error occurred hi", error: (error as Error).message });
+        }
 
-        if (body.note) appointment.note = body.note;
+    });
 
-        await appointment.save();
+//view user appointment history
+router.get("/appointment-history",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.PET_OWNER
+    ]),
 
-        res.status(201).json({
-            message: "Appointment successfully booked!",
-            payload: appointment
-        });
+    async (req: Request, res: Response): Promise<void> => {
+        try {
+            const userId = (req as any).user.userId;
+
+            const appointments = await AppointmentModel.find({ userId }).populate("userId", "name");
+
+            if (appointments.length === 0) {
+                res.status(404).json({ message: "No appointments found for this user" });
+                return;
+            }
+
+            res.status(200).json({ message: "User appointment history retrieved successfully", payload: appointments });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(500).json({ message: "Error fetching user appointments", error: error.message });
+            } else {
+                res.status(500).json({ message: "An unknown error occurred", error });
+            }
+        }
     }
-});
-
-
-// // View appointment-read part
-// router.get("/user/:userId", async (req, res) => {
-//     const appointments = await AppointmentModel.find({ userId: req.params.userId });
-
-//     if (!appointments) {
-//         return res.status(404).json({ error: "No appointments found for this user" });
-//     }
-
-//     return res.status(200).json({
-//         message: "Appointments fetched successfully",
-//         payload: appointments,
-//     });
-// });
+);
 
 
 
+// // View single appointment-admin and user
+router.get(
+    "/appointments/:id", // This route expects an appointment ID as a URL parameter
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+        common.USER_ROLES.PET_OWNER,
+    ]),
+    async (req, res) => {
+        try {
+            const appointment = await AppointmentModel.findById(req.params.id);
 
-// // Cancel appointments- update part
-// router.delete("/:id", async (req, res) => {
-//     const appointment = await AppointmentModel.findById(req.params.id);
+            if (!appointment) {
+                res.status(404).json({ message: "Appointment not found" });
+                return;
+            }
 
-//     if (!appointment) {
-//         return res.status(404).json({ error: "Appointment not found" });
-//     }
+            const userId = (req as any).user.userId;
+            const role = (req as any).user.role;
 
-//     if (req.user.id !== appointment.userId.toString()) {
-//         return res.status(403).json({ error: "Unauthorized to cancel this appointment" });
-//     }
+            // Check if the user is trying to access their own appointment
+            if (role === common.USER_ROLES.PET_OWNER && appointment.userId.toString() !== userId) {
+                res.status(403).json({ message: "You can only view your own appointments" });
+                return;
+            }
 
-//     appointment.status = "canceled";
-//     await appointment.save();
+            // Return the single appointment
+            res.status(200).json({
+                message: "Appointment fetched successfully",
+                payload: appointment,
+            });
 
-//     return res.status(200).json({
-//         message: "Appointment canceled",
-//         payload: appointment,
-//     });
-// });
+        } catch (error) {
+            res.status(500).json({ message: "Error fetching appointment", error: error });
+        }
+    }
+);
+
+
+// // Cancel appointments- update part user and  admin
+router.put(
+    "/:id",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+        common.USER_ROLES.PET_OWNER
+    ]),
+    async (req, res): Promise<void> => {
+
+        const { id: appointmentId } = req.params;  // Extract appointment ID from the URL
+        const userId = (req as any).user.userId;
+        const role = (req as any).user.role;
+        const { status, date, details } = req.body;  // Fields to update
+
+        try {
+
+            // Validate appointmentId format before querying
+            if (!appointmentId.match(/^[0-9a-fA-F]{24}$/)) {
+                res.status(400).json({ message: "Invalid appointment ID format" });
+                return;
+            }
+
+            // Find the appointment by ID
+            const appointment = await AppointmentModel.findById(appointmentId);
+            if (!appointment) {
+                res.status(404).json({ message: "Appointment not found" });
+                return;
+            }
+
+
+            // Ensure the order is in "pending" status before canceling
+            if (appointment.status !== "pending") {
+                res.status(400).json({ message: "Order can only be canceled if it's in 'pending' status" });
+                return;
+            }
+            // If the user is a pet owner, they can only update their own appointment
+            if (role === common.USER_ROLES.PET_OWNER) {
+                if (appointment.userId.toString() !== userId) {
+                    res.status(403).json({ message: "You can only update your own appointments" });
+                    return;
+                }
+            }
+
+            // Admin can cancel any "pending" order
+            if (role === common.USER_ROLES.ADMIN) {
+                appointment.status = "canceled";
+            }
+
+
+            // Save the updated appointment
+            await appointment.save();
+
+            // Send back the updated appointment in the response
+            res.status(200).json({
+                message: "Appointment successfully updated",
+                payload: appointment,
+            });
+
+        } catch (error: unknown) {
+            res.status(500).json({
+                message: "Error updating appointment",
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    }
+);
 
 
 
 
-// // Delete appoint- deletepart
+// // Delete appoint- delete part
 // router.delete("/user/:userId/:id", async (req, res) => {
 //     const appointment = await AppointmentModel.findById(req.params.id);
 
@@ -112,71 +216,80 @@ const router = Router();
 // //admin side
 
 
-// // Admin approve appointment
-// router.put("/:id/approve", async (req, res) => {
-//     const appointment = await AppointmentModel.findById(req.params.id);
+// // Admin approve appointment 
+router.patch(
+    "/admin/appointments/:appointmentId/approve",
+    AuthMiddleware.checkAuth
+        ([
+            common.USER_ROLES.ADMIN
+        ]),
 
-//     if (!appointment) {
-//         return res.status(404).json({ error: "Appointment not found" });
-//     }
+    async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { appointmentId } = req.params;
 
-//     if (!req.user.isAdmin) {
-//         return res.status(403).json({ error: "Unauthorized access" });
-//     }
+            // Find the appointment by its ID
+            const appointment = await AppointmentModel.findById(appointmentId);
 
-//     // Set status to approved
-//     appointment.status = "canceled";
-//     await appointment.save();
+            if (!appointment) {
+                res.status(404).json({ message: "Appointment not found" });
+                return
+            }
 
-//     return res.status(200).json({
-//         message: "Appointment approved",
-//         payload: appointment,
-//     });
-// });
+            // Check if the appointment is already approved
+            if (appointment.status === 'approved') {
+                res.status(400).json({ message: "Appointment is already approved" });
+                return
+            }
 
+            // Update the appointment status to 'approved'
+            appointment.status = 'approved';
+            await appointment.save();
 
-// // Admin approve appointment (e.g., approve, update date/time, etc.)
-// router.put("/admin/:id", async (req, res) => {
-//     if (!req.user.isAdmin) {
-//         return res.status(403).json({ error: "Unauthorized access" });
-//     }
+            res.status(200).json({
+                message: "Appointment approved successfully",
+                payload: appointment,
+            });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(500).json({ message: "Error approving appointment", error: error.message });
+            } else {
+                res.status(500).json({ message: "An unknown error occurred", error });
+            }
+        }
+    }
+);
 
-//     const appointment = await AppointmentModel.findById(req.params.id);
-
-//     if (!appointment) {
-//         return res.status(404).json({ error: "Appointment not found" });
-//     }
-
-//     // Admin can change fields
-//     if (req.body.status) appointment.status = req.body.status;
-//     if (req.body.date) appointment.date = req.body.date;
-//     if (req.body.time) appointment.time = req.body.time;
-
-//     await appointment.save();
-
-//     return res.status(200).json({
-//         message: "Appointment updated successfully",
-//         payload: appointment,
-//     });
-// });
 
 
 
 
 
 // // Admin view all appointments
-// router.get("/admin", async (req, res) => {
-//     if (!req.user.isAdmin) {
-//         return res.status(403).json({ error: "Unauthorized access" });
-//     }
+router.get(
+    "/admin/appointments",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+    ]),
+    async (req: Request, res: Response): Promise<void> => {
 
-//     const appointments = await AppointmentModel.find();
+        try {
 
-//     return res.status(200).json({
-//         message: "Appointments list fetched",
-//         payload: appointments,
-//     });
-// });
+            const appointments = await AppointmentModel.find();
+
+            res.status(200).json({
+                message: "Appointments retrieved successfully",
+                payload: appointments,
+            });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(500).json({ message: "Error fetching appointments", error: error.message });
+            } else {
+                res.status(500).json({ message: "An unknown error occurred", error });
+            }
+        }
+    }
+);
 
 
 // // Admin cancel appointment
@@ -203,23 +316,60 @@ const router = Router();
 
 
 // // Admin delete appointment
-// router.delete("/:id", async (req, res) => {
-//     const appointment = await AppointmentModel.findById(req.params.id);
 
-//     if (!appointment) {
-//         return res.status(404).json({ error: "Appointment not found" });
-//     }
+router.delete(
+    "/:appointmentId",
+    AuthMiddleware.checkAuth([
+        common.USER_ROLES.ADMIN,
+        common.USER_ROLES.PET_OWNER
+    ]),
+    async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { appointmentId } = req.params;
 
-//     if (!req.user.isAdmin) {
-//         return res.status(403).json({ error: "Unauthorized to delete this appointment" });
-//     }
+            // Find the appointment by ID
+            const appointment = await AppointmentModel.findById(appointmentId);
+            if (!appointment) {
+                res.status(404).json({ message: "Appointment not found" });
+                return
+            }
 
-//     await appointment.delete();
+            // Check appointment status 
+            if (appointment.status !== "approved" && appointment.status !== "canceled") {
+                res.status(400).json({
+                    message: "Appointment can only be deleted if it is complete or canceled"
+                });
+                return;
+            }
 
-//     return res.status(200).json({
-//         message: "Appointment deleted successfully",
-//     });
-// });
+            const userIdFromToken = (req as any).userIdFromToken;
+            const userRole = (req as any).userRole;
+
+            if (userRole !== "admin" && appointment.userId.toString() !== userIdFromToken) {
+                res.status(403).json({
+                    message: "You can only delete your own appointments or if you're an admin"
+                });
+                return
+            }
+
+            // Delete the appointment
+            await AppointmentModel.findByIdAndDelete(appointmentId);
+
+            res.status(200).json({ message: "Appointment deleted successfully" });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(500).json({
+                    message: "Error deleting appointment",
+                    error: error.message
+                });
+            } else {
+                res.status(500).json({ message: "An unknown error occurred", error });
+            }
+        }
+    }
+);
 
 
 
+
+export default router;
