@@ -3,12 +3,9 @@ import { Router, Request, Response } from "express";
 import OrderModel from "../models/order.model";
 import UserModel from "../models/user.model";
 import common from '../utils/common.util';
-import jwt from "jsonwebtoken";
 import AuthMiddleware from '../middleware/auth.middleware';
-
-
-
-const SECRET_KEY = process.env.JWT_SECRET || common.JWT_SECRET;
+import productModel from "../models/product.model";
+import mongoose from "mongoose";
 
 const router = Router();
 
@@ -22,43 +19,59 @@ router.post(
     ]),
     async (req, res) => {
         try {
-            const userIdFromToken = (req as any).user?.userId;
+            const { userId } = (req as any).user;
+            const { items, date } = req.body;
 
-            if (!userIdFromToken) {
-                res.status(404).json({ message: "User not found" });
-                return
-            }
+            const user = await UserModel.findById(userId);
 
-            const user = await UserModel.findById(userIdFromToken);
             if (!user) {
                 res.status(404).json({ message: "User not found" });
-                return
+                return;
             }
 
-
-            // Create order
-            const order = new OrderModel({
-                date: req.body.date,
+             // Create order
+             const order = new OrderModel({
+                date: date,
                 customer: {
                     name: user.name,
                     address: user.address,
                     phone: user.phone,
                     email: user.email
                 },
-                items: req.body.items,
                 price: req.body.price,
-                userId: userIdFromToken,
+                userId: userId,
                 status: req.body.status || "pending",
             });
 
+
+            for(const item of items) {
+                
+                const dbItem = await productModel.findById(item._id);
+
+                if(!dbItem) {
+                    res.status(404).json({ message: "Product not found! "});
+                    return;
+                }
+
+                order.items.push({
+                    _id: new mongoose.Types.ObjectId(dbItem._id as string),
+                    quantity: item.quantity,
+                    price: dbItem.price,
+                    subtotal: dbItem.price * item.quantity
+                });
+            }
+
+           
             await order.save();
 
             res.status(201).json({
                 message: "Order successfully created!",
                 payload: order,
             });
+            return;
         } catch (error) {
             res.status(500).json({ message: "Error occurred hi", error: (error as Error).message });
+            return;
         }
     });
 
@@ -90,8 +103,7 @@ router.get("/order-history",
         }
     });
 
-//user view order
-
+//user admin view single order view order
 router.get(
     "/:id",
     AuthMiddleware.checkAuth([
@@ -128,51 +140,55 @@ router.put(
     "/cancel/:orderId",
     AuthMiddleware.checkAuth([
         common.USER_ROLES.ADMIN,
-        common.USER_ROLES.PET_OWNER
-
+        common.USER_ROLES.PET_OWNER,
     ]),
     async (req, res): Promise<void> => {
-
-        const { orderId } = req.params;
+        const { orderId } = req.params;  // Use `orderId` from params
         const userId = (req as any).user.userId;
         const role = (req as any).user.role;
-        const { status } = req.body;
 
         try {
-
             // Validate orderId format before querying
             if (!orderId.match(/^[0-9a-fA-F]{24}$/)) {
                 res.status(400).json({ message: "Invalid order ID format" });
                 return;
             }
 
-            // Find order 
-            const order = await OrderModel.findById(req.params.id);
+            // Find the order by ID
+            const order = await OrderModel.findById(orderId);
             if (!order) {
                 res.status(404).json({ message: "Order not found" });
                 return;
             }
 
+            // Ensure the order is in "pending" status before canceling
             if (order.status !== "pending") {
                 res.status(400).json({ message: "Order can only be canceled if it's in 'pending' status" });
                 return;
             }
 
+            // Pet owner can only cancel their own orders
             if (role === common.USER_ROLES.PET_OWNER) {
-                // Ensure the user can only cancel their own orders
                 if (order.userId.toString() !== userId) {
                     res.status(403).json({ message: "You can only cancel your own orders" });
                     return;
                 }
             }
 
+            // Admin can cancel any "pending" order
             if (role === common.USER_ROLES.ADMIN) {
-                // Admin can cancel any "pending" order
-                order.status = "canceled";
-                await order.save();
-                res.status(200).json({ message: "Order successfully canceled", payload: order });
-                return;
+                order.status = "canceled";  // Admin cancels the order directly
             }
+
+            // Save the updated order status to "canceled"
+            await order.save();
+
+            // Send back the updated order as a response
+            res.status(200).json({
+                message: "Order successfully canceled",
+                payload: order,
+
+            });
 
         } catch (error: unknown) {
             res.status(500).json({
@@ -180,7 +196,10 @@ router.put(
                 error: error instanceof Error ? error.message : error,
             });
         }
-    });
+    }
+);
+
+
 
 
 
@@ -209,7 +228,7 @@ router.delete(
                 return;
             }
 
-            // Ensure only admins or the order owner can delete
+            // Ensure only admins or the user can delete
             if ((req as any).userRole !== "admin" && order.userId.toString() !== (req as any).userIdFromToken) {
                 res.status(403).json({ message: "You can only delete your own orders or if you're an admin" });
                 return;
@@ -237,13 +256,13 @@ router.get(
 
     async (req: Request, res: Response): Promise<void> => {
         try {
+            // Fetch all orders, 
+            const orders = await OrderModel.find();
 
-            const adminUserId = (req as any).user.userId;
-
-            // Fetch orders for the admin's userId
-            const orders = await OrderModel.find({ userId: adminUserId });
-
-            res.status(200).json({ message: "Orders retrieved successfully", payload: orders });
+            res.status(200).json({
+                message: "Orders retrieved successfully",
+                payload: orders,
+            });
         } catch (error: unknown) {
             if (error instanceof Error) {
                 res.status(500).json({ message: "Error fetching orders", error: error.message });
@@ -251,7 +270,8 @@ router.get(
                 res.status(500).json({ message: "An unknown error occurred", error });
             }
         }
-    });
+    }
+);
 
 // admin complete the order
 router.put(

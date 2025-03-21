@@ -7,6 +7,10 @@ const PetSchema: Schema = new Schema<IPetModel & Document>(
             type: String, 
             required: true 
         },
+        customer: {
+            name: { type: String, required: true },
+            phone: { type: String, required: true },
+        },
         gender: { 
             type: String, 
             required: true, 
@@ -28,10 +32,10 @@ const PetSchema: Schema = new Schema<IPetModel & Document>(
             type: String, 
             default: "" 
         },
-        ownerId: { 
-            type: Schema.Types.ObjectId, 
-            ref: "User", 
-            required: true 
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true
         }
     },
     { versionKey: false, timestamps: true }

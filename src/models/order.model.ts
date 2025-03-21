@@ -25,8 +25,9 @@ const OrderSchema: Schema<IOrderModel> = new Schema({
     },
     items: [
         {
-            product: {
-                type: String,
+            _id: {
+                type:  Schema.Types.ObjectId,
+                ref: "Product",
                 required: true
             },
             quantity: {
@@ -50,9 +51,5 @@ const OrderSchema: Schema<IOrderModel> = new Schema({
     }
 
 }, { versionKey: false, timestamps: true });
-
-OrderSchema.virtual("itemCount").get(function () {
-    return this.items.length;
-});
 
 export default model<IOrderModel>("Order", OrderSchema);

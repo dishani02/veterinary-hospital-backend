@@ -7,15 +7,21 @@ interface IPetDetails {
     image: string;
 }
 
-interface IPet {
-    petId: string;
+export interface ICustomer {
     name: string;
-    gender: "Male" | "Female";
-    details: IPetDetails;
-    ownerId: Types.ObjectId;
+    phone: string;
 }
 
-interface IPetModel extends IPet, IPetDetails, Document {}
+
+interface IPet {
+    name: string;
+    customer: ICustomer;
+    gender: "Male" | "Female";
+    details: IPetDetails;
+    userId: Types.ObjectId;
+}
+
+interface IPetModel extends IPet, IPetDetails, Document { }
 
 export {
     IPet,

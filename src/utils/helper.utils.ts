@@ -1,32 +1,55 @@
+import { object } from "joi";
 import UserModel from "../models/user.model";
 import common from "./common.util";
 import bcrypt from "bcryptjs";
 
 const generateAdmin = async () => {
-    
-    const email = "admin@admin.com";
-    const password = "123";
+    const users = [
+        {
+            email: "admin@admin.com",
+            password: "123",
+            name: "Admin user",
+            phone: "076837453",
+            nic: "666570342V",
+            address: "Malabe, Sri Lanka",
+            role: common.USER_ROLES.ADMIN
+        },
+        {
+            email: "docter@docter.com",
+            password: "123",
+            name: "doctor user",
+            phone: "076834583",
+            nic: "6678654543V",
+            address: "Colombo, Sri Lanka",
+            role: common.USER_ROLES.DOCTOR
+        }
+    ];
 
-    if (!email || !password) return;
+    for (const user of users) {
 
-    const user = await UserModel.findOne({ email });
+        if (!user.email || !user.password) continue;
 
-    if (user) return;
+        const dbUser = await UserModel.findOne({email: user.email });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+        if (dbUser) continue;
 
-    const newUser = new UserModel();
-    newUser.name = "Admin user";
-    newUser.phone = "0777123456";
-    newUser.nic = "666570342V";
-    newUser.email = email;
-    newUser.address = "Malabe, Sri Lanka";
-    newUser.role = common.USER_ROLES.ADMIN;
-    newUser.password = hashedPassword;
+        const hashedPassword = await bcrypt.hash(user.password, 10);
 
-    await newUser.save();
+        const newUser = new UserModel();
+        newUser.name = user.name;
+        newUser.phone = user.phone;
+        newUser.nic = user.nic;
+        newUser.email = user.email;
+        newUser.address = user.address;
+        newUser.role = user.role;
+        newUser.password = hashedPassword;
 
-    console.log("======Admin user successfully created======");
+        await newUser.save();
+
+        console.log("====== user successfully created======");
+    }
+
+
 };
 
 export default { generateAdmin }
