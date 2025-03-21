@@ -1,12 +1,10 @@
 import { Router, Request, Response } from 'express';
 import AppointmentModel from '../models/appointment.model';
 import UserModel from "../models/user.model";
-// import VetModel from '../models/vet.model.js';
 import common from '../utils/common.util';
 import AuthMiddleware from '../middleware/auth.middleware';
 import { appointmentSchema } from '../validations/appointment.schema.js';
-
-const SECRET_KEY = process.env.JWT_SECRET || common.JWT_SECRET;
+import petModel from '../models/pet.model';
 
 const router = Router();
 
@@ -15,31 +13,47 @@ router.post("/",
     AuthMiddleware.checkAuth([
         common.USER_ROLES.PET_OWNER
     ]),
-    async (req, res) => {
+    async (req, res): Promise<void> => {
 
-         try {
-                    const userIdFromToken = (req as any).user?.userId;
-        
-                    const user = await UserModel.findById(userIdFromToken);
-                    if (!user) {
-                        res.status(404).json({ message: "User not found" });
-                        return
-                    }
-        
+        try {
+            const { userId } = (req as any).user;
+            const { petId, date, time, reason, note, doctorId } = req.body;
 
-            // const vet = await VetModel.findById(body.veterinarian);
-            // if (!vet) return res.status(404).json({ error: "Veterinarian not found" });
+            const user = await UserModel.findById(userId);
 
-            const appointment = new AppointmentModel();
-            //appointment.veterinarian = body.veterinarian;
-            appointment.date = req.body.date;
-            appointment.time = req.body.time;
-            appointment.reason = req.body.reason;
-            appointment.status= req.body.status || "pending",
-            appointment.userId= userIdFromToken,
-            // appointment.petId = body.petId;
+            if (!user) {
+                res.status(404).json({ message: "User not found" });
+                return
+            }
 
-            //if (body.note) appointment.note = body.note;
+            const pet = await petModel.findById(petId);
+            if (!pet) {
+                res.status(404).json({ message: "Pet not found" });
+                return;
+            }
+
+            if (pet.userId.toString() !== userId.toString()) {
+                res.status(403).json({ message: "Pet not assign to user " });
+                return;
+            }
+
+            const doctor = await UserModel.findById(doctorId);
+
+            if (!doctor || doctor.role !== common.USER_ROLES.DOCTOR) {
+                res.status(404).json({ message: "Doctor not found or invalid role" });
+                return;
+            }
+
+            const appointment = new AppointmentModel({
+                date: date,
+                time: time,
+                reason: reason,
+                userId: userId,
+                petId: petId,
+                veterinarian: doctor._id,
+            });
+
+            if (note) appointment.note = note;
 
             await appointment.save();
 
@@ -47,7 +61,7 @@ router.post("/",
                 message: "Appointment successfully booked!",
                 payload: appointment
             });
-         }catch (error) {
+        } catch (error) {
             res.status(500).json({ message: "Error occurred hi", error: (error as Error).message });
         }
 
@@ -63,14 +77,19 @@ router.get("/appointment-history",
         try {
             const userId = (req as any).user.userId;
 
-            const appointments = await AppointmentModel.find({ userId }).populate("userId", "name");
+            const appointments = await AppointmentModel.find({ userId })
+                .populate("userId", "name")
+                .populate("veterinarian", "name ");
 
             if (appointments.length === 0) {
                 res.status(404).json({ message: "No appointments found for this user" });
                 return;
             }
 
-            res.status(200).json({ message: "User appointment history retrieved successfully", payload: appointments });
+            res.status(200).json({
+                message: "User appointment history retrieved successfully",
+                payload: appointments
+            });
         } catch (error: unknown) {
             if (error instanceof Error) {
                 res.status(500).json({ message: "Error fetching user appointments", error: error.message });
@@ -92,7 +111,11 @@ router.get(
     ]),
     async (req, res) => {
         try {
-            const appointment = await AppointmentModel.findById(req.params.id);
+            const appointmentId = (req.params.id);
+
+            const appointment = await AppointmentModel.findById(appointmentId)
+                .populate("userId", "name")
+                .populate("veterinarian", "name ");
 
             if (!appointment) {
                 res.status(404).json({ message: "Appointment not found" });

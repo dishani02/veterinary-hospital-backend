@@ -3,37 +3,43 @@ import { IAppointmentModel } from "../interfaces/appointment.interface";
 
 const AppointmentSchema: Schema<IAppointmentModel> = new Schema({
 
-    veterinarian: { 
-        type: String, 
-        required: true 
+    date: {
+        type: Date,
+        required: true
     },
-    date: { 
-        type: Date, 
-        required: true 
+    time: {
+        type: String,
+        required: true
     },
-    time: { 
-        type: String, 
-        required: true 
+    reason: {
+        type: String,
+        required: true
     },
-    reason: { 
-        type: String, 
-        required: true 
-    }, 
     note: {
-        type: String
+        type: String,
+        required: false,
     },
-    
-    userId: { 
+    status: {
+        type: String,
+        required: true,
+        enum: ["pending", "canceled", "approved"],
+        default: "pending"
+    },
+    userId: {
         type: Schema.Types.ObjectId,
-        ref: "user", 
-        required:true
+        ref: "User",
+        required: true
     },
-
+    veterinarian: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
     petId: {
         type: Schema.Types.ObjectId,
-        ref: "pet", 
-        required:true
-    },
+        ref: "Pet",
+        required: true
+    }
 
 }, { versionKey: false, timestamps: true });
 
