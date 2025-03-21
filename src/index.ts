@@ -9,6 +9,7 @@ import AuthRoutes from "./controllers/auth.controller";
 import OrderRoutes from "./controllers/order.controller";
 import ProductRoutes from "./controllers/product.controller";
 import AppointmentRoutes from "./controllers/appointment.controller";
+import DoctorRoutes from "./controllers/doctor.controller";
 
 
 import helperUtils from "./utils/helper.utils";
@@ -30,6 +31,7 @@ app.use("/api/order", OrderRoutes);
 app.use("/api/user", UserRoutes);
 app.use("/api/pets", PetRoutes);
 app.use("/api/auth", AuthRoutes);
+app.use("/api/doctor", DoctorRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json({ message: "API Endpoint Not Found!" });
