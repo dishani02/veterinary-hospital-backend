@@ -1,7 +1,6 @@
 {
   "name": "veterinary-hospital-backend",
   "version": "1.0.0",
-  "description": "",
   "main": "src/index.ts",
   "scripts": {
     "dev": "nodemon src/index.ts",
@@ -23,8 +22,19 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.13.11",
     "ts-node-dev": "^2.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dishani02/veterinary-hospital-backend.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/dishani02/veterinary-hospital-backend/issues"
+  },
+  "homepage": "https://github.com/dishani02/veterinary-hospital-backend#readme",
+  "description": ""
 }
