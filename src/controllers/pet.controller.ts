@@ -6,15 +6,16 @@ import AuthMiddleware from "../middleware/auth.middleware";
 
 const router = Router();
 
-
+//create pet
 router.post(
     "/",
     AuthMiddleware.checkAuth([common.USER_ROLES.PET_OWNER]),
     async (req: Request, res: Response) => {
         try {
             const { userId } = (req as any).user;
-            const { name, customer, gender, details } = req.body;
+            const { name, customer, gender, details} = req.body;
 
+            
             const user = await UserModel.findById(userId);
             if (!user) {
                 res.status(404).json({ message: "User not found" });
@@ -39,7 +40,7 @@ router.post(
         }
     }
 );
-
+//read
 router.get(
     "/",
     AuthMiddleware.checkAuth([
@@ -50,19 +51,16 @@ router.get(
         try {
             const { userId } = (req as any).user;
             const pets = await PetModel.find({ owner: userId });
-
             if (!pets.length) {
                 res.status(404).json({ message: "No pets found for this user" });
                 return;
             }
-
             res.status(200).json({ message: "Pets retrieved successfully", payload: pets });
         } catch (error) {
             res.status(500).json({ message: "Error fetching pets", error: (error as Error).message });
         }
     }
 );
-
 
 router.get(
     "/:petId",
@@ -74,14 +72,12 @@ router.get(
         try {
             const { petId } = req.params;
             const { userId } = (req as any).user;
-
             const pet = await PetModel.findOne({ _id: petId, owner: userId });
 
             if (!pet) {
                  res.status(404).json({ message: "Pet not found" });
                  return;
             }
-
             res.status(200).json({ message: "Pet retrieved successfully", payload: pet });
         } catch (error) {
             res.status(500).json({ message: "Error fetching pet details", error: (error as Error).message });
@@ -98,13 +94,11 @@ router.put(
             const { petId } = req.params;
             const { userId } = (req as any).user;
             const updateData = req.body;
-
             const pet = await PetModel.findOne({ _id: petId, owner: userId });
             if (!pet) {
                 res.status(404).json({ message: "Pet not found" });
                 return;
             }
-
             Object.assign(pet, updateData);
             await pet.save();
 
@@ -123,7 +117,6 @@ router.delete(
         try {
             const { petId } = req.params;
             const { userId } = (req as any).user;
-
             const pet = await PetModel.findOne({ _id: petId, owner: userId });
             if (!pet) {
                  res.status(404).json({ message: "Pet not found" });
