@@ -13,8 +13,7 @@ router.post(
     async (req: Request, res: Response) => {
         try {
             const { userId } = (req as any).user;
-            const { name, customer, gender, details} = req.body;
-
+            const { name, gender, type, breed,age,image} = req.body;
             
             const user = await UserModel.findById(userId);
             if (!user) {
@@ -24,13 +23,16 @@ router.post(
 
             const pet = new PetModel({
                 name,
-                customer,
+                customer: {
+                    name: user.name,
+                    phone: user.phone
+                },
                 gender,
-                type: details.type,
-                breed: details.breed,
-                age: details.age,
-                image: details.image,
-                owner: userId
+                type: type, 
+                breed: breed,
+                age: age,
+                image: image,
+                userId: userId
             });
 
             await pet.save();
@@ -50,7 +52,7 @@ router.get(
     async (req: Request, res: Response) => {
         try {
             const { userId } = (req as any).user;
-            const pets = await PetModel.find({ owner: userId });
+            const pets = await PetModel.find({ userId: userId });
             if (!pets.length) {
                 res.status(404).json({ message: "No pets found for this user" });
                 return;
@@ -72,7 +74,7 @@ router.get(
         try {
             const { petId } = req.params;
             const { userId } = (req as any).user;
-            const pet = await PetModel.findOne({ _id: petId, owner: userId });
+            const pet = await PetModel.findOne({ _id: petId, userId: userId });
 
             if (!pet) {
                  res.status(404).json({ message: "Pet not found" });
@@ -94,7 +96,7 @@ router.put(
             const { petId } = req.params;
             const { userId } = (req as any).user;
             const updateData = req.body;
-            const pet = await PetModel.findOne({ _id: petId, owner: userId });
+            const pet = await PetModel.findOne({ _id: petId, userId: userId });
             if (!pet) {
                 res.status(404).json({ message: "Pet not found" });
                 return;
@@ -117,7 +119,7 @@ router.delete(
         try {
             const { petId } = req.params;
             const { userId } = (req as any).user;
-            const pet = await PetModel.findOne({ _id: petId, owner: userId });
+            const pet = await PetModel.findOne({ _id: petId, userId: userId });
             if (!pet) {
                  res.status(404).json({ message: "Pet not found" });
                  return;
