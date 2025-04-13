@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import { IDoctorModel } from "../interfaces/doctor.interface";
+import common from "../utils/common.util";
 
 const DoctorSchema: Schema<IDoctorModel> = new Schema(
     {
@@ -22,7 +23,19 @@ const DoctorSchema: Schema<IDoctorModel> = new Schema(
         phone: { 
             type: String, 
             required: true 
-        },
+        }, role: {
+                    type: String,
+                    enum: [
+                        common.USER_ROLES.ADMIN,
+                        common.USER_ROLES.DOCTOR,
+                        common.USER_ROLES.PET_OWNER
+                    ],
+                    required: true
+                },
+                password: { 
+                    type: String, 
+                    required: true 
+                }, 
     }, 
     { versionKey: false, timestamps: true }
 );

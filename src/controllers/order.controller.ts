@@ -8,7 +8,7 @@ import productModel from "../models/product.model";
 import mongoose from "mongoose";
 
 const router = Router();
-
+//cretae order
 router.post(
     "/",
     AuthMiddleware.checkAuth([
@@ -71,7 +71,7 @@ router.post(
             return;
         }
     });
-
+//read
 router.get("/order-history",
     AuthMiddleware.checkAuth([
         common.USER_ROLES.ADMIN,
@@ -103,6 +103,7 @@ router.get("/order-history",
         }
     });
 
+//single order
 router.get(
     "/:orderId",
     AuthMiddleware.checkAuth([

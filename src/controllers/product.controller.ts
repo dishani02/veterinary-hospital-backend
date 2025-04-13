@@ -5,7 +5,7 @@ import AuthMiddleware from '../middleware/auth.middleware';
 import common from '../utils/common.util';
 
 const router = Router();
-
+//create product
 router.post(
     "/",
     AuthMiddleware.checkAuth([
@@ -105,10 +105,8 @@ router.put(
     async (req, res) => {
         const { productId } = req.params;
         const updatedData = req.body;
-
         try {
             const product = await ProductModel.findById(productId);
-
             if (!product) {
                 res.status(404).json({ message: "Product not found" });
                 return
@@ -118,15 +116,12 @@ router.put(
                 updatedData,
                 { new: true }
             );
-
             res.status(200).json({ message: "Product successfully updated!", payload: updatedProduct });
         } catch (error) {
             res.status(500).json({ message: "Error updating product", error: error });
         }
     }
 );
-
-
 // //delete
 router.delete(
     "/:productId",

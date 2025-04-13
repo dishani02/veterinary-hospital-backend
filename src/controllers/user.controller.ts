@@ -7,7 +7,7 @@ import common from "../utils/common.util";
 
 dotenv.config();
 const router = Router();
-
+//create user
 router.post("/", async (req: Request, res: Response) => {
     try {
         const { name, phone, nic, email, address, password } = req.body;
