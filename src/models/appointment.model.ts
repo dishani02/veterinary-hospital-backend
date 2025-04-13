@@ -2,9 +2,8 @@ import { model, Schema } from "mongoose";
 import { IAppointmentModel } from "../interfaces/appointment.interface";
 
 const AppointmentSchema: Schema<IAppointmentModel> = new Schema({
-
     date: {
-        type: Date,
+        type: String,
         required: true
     },
     time: {
@@ -31,14 +30,24 @@ const AppointmentSchema: Schema<IAppointmentModel> = new Schema({
         required: true
     },
     veterinarian: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true
+        _id: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+        name: {
+            type: String
+        }
     },
-    petId: {
-        type: Schema.Types.ObjectId,
-        ref: "Pet",
-        required: true
+    pet: {
+        _id: {
+            type: Schema.Types.ObjectId,
+            ref: "Pet",
+            required: true
+        },
+        name: {
+            type: String
+        }
     }
 
 }, { versionKey: false, timestamps: true });
