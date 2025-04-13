@@ -44,8 +44,8 @@ router.post("/",
                 time: time,
                 reason: reason,
                 userId: userId,
-                petId: petId,
-                veterinarian: doctor._id,
+                pet: pet,
+                veterinarian: doctor,
             });
 
             if (note) appointment.note = note;
@@ -161,38 +161,6 @@ router.delete(
     }
 );
 
-
-
-// Admin approve appointment 
-router.patch(
-    "/:appointmentId",
-    AuthMiddleware.checkAuth([common.USER_ROLES.ADMIN]),
-    async (req, res) => {
-        const { appointmentId } = req.params;
-
-        try {
-            const appointment = await AppointmentModel.findById(appointmentId);
-            if (!appointment) {
-                res.status(404).json({ message: "Appointment not found" });
-                return
-            }
-            if (appointment.status !== 'pending') {
-                res.status(400).json({ message: "Only pending appointments can be marked as approved" });
-                return
-            }
-            appointment.status = 'approved';
-            await appointment.save();
-
-            res.status(200).json({ message: "Appointment approved successfully", payload: appointment, });
-        } catch (error) {
-            res.status(500).json({
-                message: "Error in updating appointment status",
-                error: error instanceof Error ? error.message : error,
-            });
-        }
-    }
-);
-
 //Update status
 router.patch(
     "/:appointmentId/cancel",
@@ -231,6 +199,39 @@ router.patch(
         }
     }
 );
+
+
+
+// Admin approve appointment 
+router.patch(
+    "/:appointmentId",
+    AuthMiddleware.checkAuth([common.USER_ROLES.ADMIN]),
+    async (req, res) => {
+        const { appointmentId } = req.params;
+
+        try {
+            const appointment = await AppointmentModel.findById(appointmentId);
+            if (!appointment) {
+                res.status(404).json({ message: "Appointment not found" });
+                return
+            }
+            if (appointment.status !== 'pending') {
+                res.status(400).json({ message: "Only pending appointments can be marked as approved" });
+                return
+            }
+            appointment.status = 'approved';
+            await appointment.save();
+
+            res.status(200).json({ message: "Appointment approved successfully", payload: appointment, });
+        } catch (error) {
+            res.status(500).json({
+                message: "Error in updating appointment status",
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    }
+);
+
 
 
 
