@@ -1,7 +1,7 @@
 import { model, Schema, Document } from "mongoose";
 import { IPetModel } from "../interfaces/pet.interface";
 
-const PetSchema: Schema = new Schema<IPetModel & Document>(
+const PetSchema: Schema = new Schema<IPetModel>(
     {
         name: { 
             type: String, 
