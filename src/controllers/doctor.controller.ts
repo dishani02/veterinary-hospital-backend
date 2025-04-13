@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import DoctorModel from '../models/doctor.model';
+import bcrypt from "bcryptjs";
 import AuthMiddleware from '../middleware/auth.middleware';
 import common from '../utils/common.util';
 import UserModel from '../models/user.model';
@@ -7,22 +8,41 @@ import UserModel from '../models/user.model';
 const router = Router();
 
 // Create doctor
+
 router.post(
     "/",
-    AuthMiddleware.checkAuth([
-        common.USER_ROLES.ADMIN
-    ]),
+    AuthMiddleware.checkAuth([common.USER_ROLES.ADMIN]),
     async (req, res) => {
         try {
-            const body = req.body;
-            const doctor = new DoctorModel(body);
+            const { name, phone, nic, email, address, password } = req.body;
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            const doctor = new DoctorModel({
+                name,
+                phone,
+                nic,
+                email,
+                address,
+                password: hashedPassword,
+                role: common.USER_ROLES.DOCTOR  
+            });
+
             await doctor.save();
-            res.status(201).json({ message: "Doctor successfully created!", payload: doctor });
+
+            res.status(201).json({
+                message: "Doctor successfully created!",
+                payload: doctor
+            });
         } catch (error) {
-            res.status(500).json({ message: "Error creating doctor", error });
+            res.status(500).json({
+                message: "Error creating doctor",
+                error: error instanceof Error ? error.message : error
+            });
         }
     }
 );
+
 
 // Get all doctors
 router.get(

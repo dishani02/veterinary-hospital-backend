@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 interface IProduct {
     name: string;
@@ -11,6 +11,7 @@ interface IProduct {
     threshold: number;
     description: string;
     image: string;
+    userId: Types.ObjectId;
 }
 
 interface IProductModel extends IProduct, Document { }

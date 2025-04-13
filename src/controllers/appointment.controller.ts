@@ -7,6 +7,7 @@ import petModel from '../models/pet.model';
 
 const router = Router();
 
+//create appointment
 router.post("/",
     AuthMiddleware.checkAuth([
         common.USER_ROLES.PET_OWNER
@@ -59,7 +60,7 @@ router.post("/",
 
     });
 
-
+//Read all appointment
 router.get("/appointment-history",
     AuthMiddleware.checkAuth([
         common.USER_ROLES.ADMIN,
@@ -90,9 +91,7 @@ router.get("/appointment-history",
     }
 );
 
-
-
-
+ // Read the single appointment
 router.get(
     "/:appointmentId",
     AuthMiddleware.checkAuth([
@@ -119,7 +118,7 @@ router.get(
         }
     });
 
-
+//delete
 router.delete(
     "/:appointmentId",
     AuthMiddleware.checkAuth([
@@ -194,6 +193,7 @@ router.patch(
     }
 );
 
+//Update status
 router.patch(
     "/:appointmentId/cancel",
     AuthMiddleware.checkAuth([
