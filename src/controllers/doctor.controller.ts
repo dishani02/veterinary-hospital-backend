@@ -2,6 +2,7 @@ import { Router } from 'express';
 import DoctorModel from '../models/doctor.model';
 import AuthMiddleware from '../middleware/auth.middleware';
 import common from '../utils/common.util';
+import UserModel from '../models/user.model';
 
 const router = Router();
 
@@ -32,7 +33,9 @@ router.get(
     ]),
     async (req, res) => {
         try {
-            const doctors = await DoctorModel.find();
+            const doctors = await UserModel.find({
+                role: common.USER_ROLES.DOCTOR
+            });
             res.status(200).json(doctors);
         } catch (error) {
             res.status(500).json({ message: "Error fetching doctors", error });
