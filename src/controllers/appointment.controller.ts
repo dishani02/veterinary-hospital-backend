@@ -24,25 +24,21 @@ router.post("/",
                 res.status(404).json({ message: "User not found" });
                 return
             }
-
             const pet = await petModel.findById(petId);
             if (!pet) {
                 res.status(404).json({ message: "Pet not found" });
                 return;
             }
-
             if (pet.userId.toString() !== userId.toString()) {
                 res.status(403).json({ message: "Pet not assign to user " });
                 return;
             }
-
             const doctor = await UserModel.findById(doctorId);
 
             if (!doctor || doctor.role !== common.USER_ROLES.DOCTOR) {
                 res.status(404).json({ message: "Doctor not found or invalid role" });
                 return;
             }
-
             const appointment = new AppointmentModel({
                 date: date,
                 time: time,
@@ -53,9 +49,7 @@ router.post("/",
             });
 
             if (note) appointment.note = note;
-
             await appointment.save();
-
             res.status(201).json({
                 message: "Appointment successfully booked!",
                 payload: appointment
@@ -81,12 +75,10 @@ router.get("/appointment-history",
             if (role === common.USER_ROLES.ADMIN) {
                 // Fetch user appointments history
                 const appointments = await AppointmentModel.find();
-
                 res.status(200).json({ message: "Appointment history retrieved successfully", payload: appointments });
             } else {
                 // Fetch user appointments history
                 const appointments = await AppointmentModel.find({ userId });
-
                 res.status(200).json({ message: "User appointments history retrieved successfully", payload: appointments });
             }
         } catch (error: unknown) {
@@ -116,13 +108,10 @@ router.get(
                 res.status(404).json({ message: "Appointment not found" });
                 return;
             }
-
-            if (role === common.USER_ROLES.PET_OWNER && appointment.userId.toString() !== userId) {
+             if (role === common.USER_ROLES.PET_OWNER && appointment.userId.toString() !== userId) {
                 res.status(403).json({ message: "You can only view your own appointments" });
                 return;
             }
-
-            // Return the single appointment
             res.status(200).json(appointment);
         } catch (error) {
             res.status(500).json({ message: "Error fetching appointment", error: error });
@@ -141,31 +130,24 @@ router.delete(
             const { appointmentId } = req.params;
             const { userId, role } = (req as any).user;
 
-            // Find the appointment by ID
             const appointment = await AppointmentModel.findById(appointmentId);
             if (!appointment) {
                 res.status(404).json({ message: "Appointment not found" });
                 return
             }
-
-            // Check appointment status 
             if (appointment.status === "approved") {
                 res.status(400).json({
                     message: "Appointment can only be deleted if it is pending or canceled"
                 });
                 return;
             }
-
-            // Ensure only admins or the user can delete
             if (role !== "admin" && appointment.userId.toString() !== userId.toString()) {
                 res.status(403).json({ message: "You can only delete your own appointments or if you're an admin" });
                 return;
             }
-
-            // Delete the appointment
             await AppointmentModel.findByIdAndDelete(appointmentId);
+             res.status(200).json({ message: "Appointment deleted successfully" });
 
-            res.status(200).json({ message: "Appointment deleted successfully" });
         } catch (error: unknown) {
             if (error instanceof Error) {
                 res.status(500).json({
@@ -198,7 +180,6 @@ router.patch(
                 res.status(400).json({ message: "Only pending appointments can be marked as approved" });
                 return
             }
-
             appointment.status = 'approved';
             await appointment.save();
 
@@ -229,17 +210,14 @@ router.patch(
                 res.status(404).json({ message: "Appointment not found" });
                 return;
             }
-
             if (appointment.status !== "pending") {
                 res.status(400).json({ message: "Only pending appointments can be canceled" });
                 return;
             }
-
             if (role !== common.USER_ROLES.ADMIN && appointment.userId.toString() !== userId.toString()) {
                 res.status(403).json({ message: "You can only cancel your own appointments or if you're an admin" });
                 return;
             }
-
             appointment.status = "canceled";
             await appointment.save();
 
@@ -253,6 +231,63 @@ router.patch(
         }
     }
 );
+
+
+
+// router.patch(
+//     "/:appointmentId/update",
+//     AuthMiddleware.checkAuth([
+//         common.USER_ROLES.ADMIN,
+//         common.USER_ROLES.PET_OWNER
+//     ]),
+//     async (req, res) => {
+//         const { appointmentId } = req.params;
+//         const { userId, role } = (req as any).user;
+//         const { date, time, reason, note, doctorId } = req.body;
+
+//         try {
+//             const appointment = await AppointmentModel.findById(appointmentId);
+//             if (!appointment) {
+//                 res.status(404).json({ message: "Appointment not found" });
+//                 return;
+//             }
+
+//             if (role !== common.USER_ROLES.ADMIN && appointment.userId.toString() !== userId.toString()) {
+//                 res.status(403).json({ message: "You can only update your own appointments or if you're an admin" });
+//                 return;
+//             }
+
+//             if (doctorId) {
+//                 const doctor = await UserModel.findById(doctorId);
+//                 if (!doctor || doctor.role !== common.USER_ROLES.DOCTOR) {
+//                     res.status(404).json({ message: "Doctor not found or invalid role" });
+//                     return;
+//                 }
+//                 const veterinarian = doctor._id;
+//             }
+
+//             if (date) appointment.date = date;
+//             if (time) appointment.time = time;
+//             if (reason) appointment.reason = reason;
+//             if (note) appointment.note = note;
+
+//             await appointment.save();
+
+//             res.status(200).json({
+//                 message: "Appointment updated successfully",
+//                 payload: appointment,
+//             });
+
+//         } catch (error) {
+//             res.status(500).json({
+//                 message: "Error updating appointment",
+//                 error: error instanceof Error ? error.message : error,
+//             });
+//         }
+//     }
+// );
+
+
 
 
 export default router;
