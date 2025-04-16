@@ -91,32 +91,72 @@ router.get("/appointment-history",
     }
 );
 
- // Read the single appointment
 router.get(
     "/:appointmentId",
     AuthMiddleware.checkAuth([
-        common.USER_ROLES.ADMIN,
-        common.USER_ROLES.PET_OWNER,
+      common.USER_ROLES.ADMIN,
+      common.USER_ROLES.PET_OWNER,
     ]),
-    async (req, res) => {
-        try {
-            const { appointmentId } = req.params;
-            const { userId, role } = (req as any).user;
-
-            const appointment = await AppointmentModel.findById(appointmentId);
-            if (!appointment) {
-                res.status(404).json({ message: "Appointment not found" });
-                return;
-            }
-             if (role === common.USER_ROLES.PET_OWNER && appointment.userId.toString() !== userId) {
-                res.status(403).json({ message: "You can only view your own appointments" });
-                return;
-            }
-            res.status(200).json(appointment);
-        } catch (error) {
-            res.status(500).json({ message: "Error fetching appointment", error: error });
+    async (req: Request, res: Response): Promise<void> => {
+      try {
+        const { appointmentId } = req.params;
+        const { userId, role } = (req as any).user;
+  
+        const appointment = await AppointmentModel.findById(appointmentId);
+        if (!appointment) {
+           res.status(404).json({ message: "Appointment not found" });
+           return;
         }
-    });
+  
+        if (
+          role === common.USER_ROLES.PET_OWNER &&
+          appointment.userId.toString() !== userId
+        ) {
+           res
+            .status(403)
+            .json({ message: "You can only view your own appointments" });
+            return;
+        }
+  
+         res.status(200).json({ payload: appointment }); // ✅ Added 'payload'
+         return;
+      } catch (error) {
+         res
+          .status(500)
+          .json({ message: "Error fetching appointment", error });
+          return;
+      }
+    }
+  );
+  
+
+
+ // Read the single appointment
+// router.get(
+//     "/:appointmentId",
+//     AuthMiddleware.checkAuth([
+//         common.USER_ROLES.ADMIN,
+//         common.USER_ROLES.PET_OWNER,
+//     ]),
+//     async (req, res) => {
+//         try {
+//             const { appointmentId } = req.params;
+//             const { userId, role } = (req as any).user;
+
+//             const appointment = await AppointmentModel.findById(appointmentId);
+//             if (!appointment) {
+//                 res.status(404).json({ message: "Appointment not found" });
+//                 return;
+//             }
+//              if (role === common.USER_ROLES.PET_OWNER && appointment.userId.toString() !== userId) {
+//                 res.status(403).json({ message: "You can only view your own appointments" });
+//                 return;
+//             }
+//             res.status(200).json(appointment);
+//         } catch (error) {
+//             res.status(500).json({ message: "Error fetching appointment", error: error });
+//         }
+//     });
 
 //delete
 router.delete(
