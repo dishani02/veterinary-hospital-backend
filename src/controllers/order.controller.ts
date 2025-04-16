@@ -104,34 +104,36 @@ router.get("/order-history",
     });
 
 //single order
+// controllers/order.ts or routes/order.ts
 router.get(
     "/:orderId",
     AuthMiddleware.checkAuth([
-        common.USER_ROLES.ADMIN,
-        common.USER_ROLES.PET_OWNER,
+      common.USER_ROLES.ADMIN,
+      common.USER_ROLES.PET_OWNER,
     ]),
-    async (req, res) => {
-        try {
-            const { orderId } = req.params;
-            const { userId, role } = (req as any).user;
-
-            // Fetch single order by ID
-            const order = await OrderModel.findById(orderId);
-            if (!order) {
-                res.status(404).json({ message: "Order not found" });
-                return;
-            }
-
-            if (role === common.USER_ROLES.PET_OWNER && order.userId.toString() !== userId) {
-                res.status(403).json({ message: "You can only view your own orders" });
-                return;
-            }
-            // Return the single order, not a list of orders
-            res.status(200).json(order);
-        } catch (error) {
-            res.status(500).json({ message: "Error fetching Order", error: error });
+    async (req, res : any) => {
+      try {
+        const { orderId } = req.params;
+        const { userId, role } = (req as any).user;
+  
+        const order = await OrderModel.findById(orderId)
+          .populate("items.product");
+  
+        if (!order) {
+          return res.status(404).json({ message: "Order not found" });
         }
-    });
+  
+        if (role === common.USER_ROLES.PET_OWNER && order.userId.toString() !== userId) {
+          return res.status(403).json({ message: "You can only view your own orders" });
+        }
+  
+        return res.status(200).json({ payload: order });
+      } catch (error) {
+        return res.status(500).json({ message: "Error fetching Order", error });
+      }
+    }
+  );
+  
 
 router.delete(
     "/:orderId",

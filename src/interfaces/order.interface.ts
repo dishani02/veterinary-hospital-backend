@@ -15,13 +15,15 @@ export interface ICustomer {
 }
 
 interface IOrder {
+    orderId: string;
     date: Date;
-    customer: ICustomer;   
+    customer: ICustomer;
     price: number;
-    status: "pending" | "canceled" | "complete"; 
+    status: "pending" | "canceled" | "complete";
     items: IOrderItem[];
     userId: Types.ObjectId;
 }
+
 
 interface IOrderModel extends IOrder, Document {}
 

@@ -2,7 +2,11 @@ import { model, Schema, Types } from "mongoose";
 import { IOrderModel } from "../interfaces/order.interface";
 
 const OrderSchema: Schema<IOrderModel> = new Schema({
-    
+    orderId: {
+        type: String,
+        unique: true,
+        default: () => `ORD-${Date.now()}`
+    },
     date: {
         type: Date,
         required: true
@@ -26,7 +30,7 @@ const OrderSchema: Schema<IOrderModel> = new Schema({
     items: [
         {
             _id: {
-                type:  Schema.Types.ObjectId,
+                type: Schema.Types.ObjectId,
                 ref: "Product",
                 required: true
             },
@@ -49,7 +53,6 @@ const OrderSchema: Schema<IOrderModel> = new Schema({
         ref: "User",
         required: true
     }
-
 }, { versionKey: false, timestamps: true });
 
 export default model<IOrderModel>("Order", OrderSchema);
